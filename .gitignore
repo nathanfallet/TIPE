@@ -1,2 +1,5 @@
 .vscode
 .DS_Store
+*.out
+*.cmi
+*.cmo
