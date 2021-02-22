@@ -1,9 +1,17 @@
 (*
-Projet TIPE sur l'AES
+* Projet TIPE sur la cryptographie
+* et le chiffrement
+*
+* Partie : AES
+*
+* Auteurs :
+* FALLET Nathan
+* LAMIDEL Arthur
+* MAKALOU SHérif
 *)
 
 (*
-Table de substitution
+* Table de substitution
 *)
 let sbox = [|
     0x63; 0x7c; 0x77; 0x7b; 0xf2; 0x6b; 0x6f; 0xc5; 0x30; 0x01; 0x67; 0x2b; 0xfe; 0xd7; 0xab; 0x76;
@@ -25,8 +33,8 @@ let sbox = [|
 |];;
 
 (*
-Substitution
-On remplace chaque élément du tableau par son image dans la substitution box
+* Substitution
+* On remplace chaque élément du tableau par son image dans la substitution box
 *)
 let substitution entree =
     [|
@@ -37,8 +45,8 @@ let substitution entree =
     |];;
 
 (*
-Décalage
-On permutte simplement l'emplacement des éléments dans le tableau
+* Décalage
+* On permutte simplement l'emplacement des éléments dans le tableau
 *)
 let decalage entree =
     [|
@@ -50,16 +58,16 @@ let decalage entree =
     |];;
 
 (*
-Mixage
-On fait les produits des colonnes pour mélanger les contenus
+* Mixage
+* On fait les produits des colonnes pour mélanger les contenus
 *)
 let mixage entree =
     entree;; (* TODO *)
 
 (*
-Ajout de la clé
-On fait l'addition avec la clé du tour
-L'addition mudulo 2 correspond à un ou exclusif (lxor)
+* Ajout de la clé
+* On fait l'addition avec la clé du tour
+* L'addition mudulo 2 correspond à un ou exclusif (lxor)
 *)
 let ajout entree cle =
     [|
@@ -70,8 +78,8 @@ let ajout entree cle =
     |];;
 
 (*
-Tour
-On combine les étapes
+* Tour
+* On combine les étapes
 *)
 let rec tour entree n =
     match n with
@@ -81,7 +89,7 @@ let rec tour entree n =
     | _ -> tour (ajout (mixage (decalage (substitution entree))) entree) (n-1);;
 
 (*
-On fait passer les données par les tours
+* On fait passer les données par les tours
 *)
 let chiffrer entree =
     (* On fait l'extension de la clé pour les tours *)
@@ -90,7 +98,7 @@ let chiffrer entree =
     tour entree 10;;
 
 (*
-Simple test
+* Simple test
 *)
 let print_array array =
     for i = 0 to 3 do
@@ -107,5 +115,5 @@ print_endline "- APRES -";
 let result = chiffrer test in
 print_array result;;
 (*
-Fin du simple test
+* Fin du simple test
 *)
