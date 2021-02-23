@@ -11,6 +11,13 @@
 *)
 
 (*
+* Import des fichiers annexes
+*)
+
+open Polynomes;;
+open Matrices;;
+
+(*
 * Table de substitution
 *)
 let sbox = [|
@@ -59,10 +66,26 @@ let decalage entree =
 
 (*
 * Mixage
-* On fait les produits des colonnes pour mélanger les contenus
+* On fait les produits des colonnes pour mélanger le contenu
 *)
 let mixage entree =
-    entree;; (* TODO *)
+    let sortie = Array.make 16 0 in
+    for i = 0 to 3 do
+        (* On extrait la colonne *)
+        let colonne = [|
+            entree.(i*4);
+            entree.(i*4 + 1);
+            entree.(i*4 + 2);
+            entree.(i*4 + 3)
+        |] in
+        (* On fait le produit et on place les coefficients *)
+        let nouvelle_colonne = produit_colonne colonne in
+        sortie.(i*4) <- nouvelle_colonne.(0);
+        sortie.(i*4 + 1) <- nouvelle_colonne.(1);
+        sortie.(i*4 + 2) <- nouvelle_colonne.(2);
+        sortie.(i*4 + 3) <- nouvelle_colonne.(3)
+    done;
+    sortie;;
 
 (*
 * Ajout de la clé

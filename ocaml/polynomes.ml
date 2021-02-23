@@ -87,7 +87,7 @@ let rec reste dividende diviseur =
     let d1 = degree dividende in
     let d2 = degree diviseur in
     (* On regarde lequel a le plus grand degrée *)
-    if d1 > d2 then
+    if d1 >= d2 then
         (*
         * Si c'est le dividende, on multiplie le diviseur par x à la
         * puissance la différence des dégrées, et on soustrait ce résultat
