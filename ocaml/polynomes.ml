@@ -9,7 +9,7 @@
 * Auteurs :
 * FALLET Nathan
 * LAMIDEL Arthur
-* MAKALOU SHérif
+* MAKALOU Shérif
 *)
 
 (*

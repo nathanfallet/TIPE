@@ -6,8 +6,12 @@ Etude des algorithmes de cryptographie symétriques et asymétriques (avec objec
 
 ## Documents textuels rédigés lors du TIPE
 
-Voir le dossier `docs/` du dépôt.
+Les documents de trouvent dans le dossier `docs/`.
+
+## Code source
+
+Le code source du projet se trouve dans le dossier `ocaml/`.
 
 ## Liens utiles
 
-Tableau Trello : https://trello.com/invite/b/lKhSvegX/f2bd481588774f3fe4401af9b7bb30fb/tipe
+Tableau Trello : https://trello.com/b/lKhSvegX
