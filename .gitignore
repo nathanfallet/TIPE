@@ -1,5 +1,8 @@
 .vscode
 .DS_Store
 *.out
+*.exe
 *.cmi
 *.cmo
+*.cmx
+*.o
