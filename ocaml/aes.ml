@@ -40,6 +40,12 @@ let sbox = [|
 |];;
 
 (*
+* Constantes de tours
+* Corresponds aux puissances de X de -1 à 9
+*)
+let rc = [|0x8d; 0x01; 0x02; 0x04; 0x08; 0x10; 0x20; 0x40; 0x80; 0x1b; 0x36|];;
+
+(*
 * Substitution
 * On remplace chaque élément du tableau par son image dans la substitution box
 *)
@@ -78,6 +84,7 @@ let mixage entree =
             entree.(i*4 + 2);
             entree.(i*4 + 3)
         |] in
+
         (* On fait le produit et on place les coefficients *)
         let nouvelle_colonne = produit_colonne colonne in
         sortie.(i*4) <- nouvelle_colonne.(0);
@@ -101,42 +108,49 @@ let ajout entree cle =
     |];;
 
 (*
+* On calcul la clé du tour suivant
+*)
+let clef_suivante cle r =
+    (* On défini une clé vierge *)
+    let nouvelle_cle = Array.make 16 0 in
+
+    (* On calcul les coefficients de la première colonne *)
+    nouvelle_cle.(0) <- cle.(0) lxor sbox.(cle.(13)) lxor rc.(r);
+    nouvelle_cle.(1) <- cle.(1) lxor sbox.(cle.(14));
+    nouvelle_cle.(2) <- cle.(2) lxor sbox.(cle.(15));
+    nouvelle_cle.(3) <- cle.(3) lxor sbox.(cle.(12));
+
+    (* On calcul tous les autres coefficients *)
+    for k = 4 to 15 do
+        nouvelle_cle.(k) <- cle.(k) lxor nouvelle_cle.(k-4)
+    done;
+    nouvelle_cle;;
+
+(*
 * Tour
 * On combine les étapes
 *)
-let rec tour entree n =
+let rec tour entree cle n =
+    (* On calcul la nouvelle clé *)
+    let nouvelle_cle = clef_suivante cle (11-n) in
+
     match n with
     (* Dernier tour, sans le mixage *)
-    | 1 -> ajout (decalage (substitution entree)) entree
+    | 1 -> ajout (decalage (substitution entree)) nouvelle_cle
+
     (* Tour normal, qu'on envoie au tour suivant *)
-    | _ -> tour (ajout (mixage (decalage (substitution entree))) entree) (n-1);;
+    | _ -> tour (ajout (mixage (decalage (substitution entree))) nouvelle_cle) nouvelle_cle (n-1);;
 
 (*
 * On fait passer les données par les tours
 *)
-let chiffrer entree =
-    (* On fait l'extension de la clé pour les tours *)
-    (* TODO *)
-    (* On lance les tours - Nombre à ajuster selon la taille de la clé *)
-    tour entree 10;;
+let chiffrer entree cle =
+    (* On ajoute la cle initiale *)
+    let keyed = ajout entree cle in
 
-(*
-* Simple test
-*)
-let print_array array =
-    for i = 0 to 3 do
-        for j = 0 to 3 do
-            print_int array.(i * 4 + j);
-            print_string "\t";
-        done;
-        print_string "\n";
-    done;;
-let test = [|1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16|] in
-print_endline "- AVANT -";
-print_array test;
-print_endline "- APRES -";
-let result = chiffrer test in
-print_array result;;
-(*
-* Fin du simple test
-*)
+    (*
+    * On lance les tours
+    * On se fixe sur une clé de taille 128 bits (16 octets)
+    * donc on aura toujours 10 tours
+    *)
+    tour keyed cle 10;;

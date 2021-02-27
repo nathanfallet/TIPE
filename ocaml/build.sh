@@ -1,1 +1,1 @@
-ocamlopt polynomes.ml matrices.ml aes.ml
+ocamlopt polynomes.ml matrices.ml aes.ml demo.ml
