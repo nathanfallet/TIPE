@@ -21,7 +21,7 @@ let polynome n =
     (* On fabrique un polynôme *)
     let p = Array.make 15 0 in
     for k = 0 to 14 do
-        (* Coefficient de degrée k *)
+        (* Coefficient de degré k *)
         p.(k) <- (n lsr k) land 1
     done;
     p;;
@@ -47,15 +47,15 @@ let somme p1 p2 =
     (* On fabrique un polynôme *)
     let p = Array.make 15 0 in
     for k = 0 to 14 do
-        (* Somme des coefficients de degrée k *)
+        (* Somme des coefficients de degré k *)
         p.(k) <- (p1.(k) lxor p2.(k))
     done;
     p;;
 
 (*
-* Degrée d'un polynôme
+* Degré d'un polynôme
 *)
-let degree p =
+let degre p =
     let l = Array.length p in
     let d = ref 0 in
     for k = 0 to l-1 do
@@ -70,9 +70,9 @@ let produit p1 p2 =
     (* On fabrique un polynôme *)
     let p = Array.make 15 0 in
     for k = 0 to 14 do
-        (* Coefficient de degrée k *)
+        (* Coefficient de degré k *)
         for i = 0 to k do
-            (* La somme des coefficients de degrée i et j avec i + j = k *)
+            (* La somme des coefficients de degré i et j avec i + j = k *)
             p.(k) <- p.(k) lxor (p1.(i) land p2.(k-i))
         done
     done;
@@ -83,10 +83,10 @@ let produit p1 p2 =
 * deux polynômes
 *)
 let rec reste dividende diviseur =
-    (* Degrées des polynômes *)
-    let d1 = degree dividende in
-    let d2 = degree diviseur in
-    (* On regarde lequel a le plus grand degrée *)
+    (* Degrés des polynômes *)
+    let d1 = degre dividende in
+    let d2 = degre diviseur in
+    (* On regarde lequel a le plus grand degré *)
     if d1 >= d2 then
         (*
         * Si c'est le dividende, on multiplie le diviseur par x à la
