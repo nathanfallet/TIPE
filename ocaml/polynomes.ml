@@ -24,7 +24,7 @@ let polynome n =
         (* Coefficient de degré k *)
         p.(k) <- (n lsr k) land 1
     done;
-    p;;
+    p
 
 (*
 * Conversion d'un polynôme en nombre
@@ -38,10 +38,10 @@ let nombre p =
         (* On multiplie le coefficient par la puissance de 2 *)
         n := !n + (p.(k) lsl k)
     done;
-    !n;;
+    !n
 
 (*
-* Somme de deux polynôme
+* Somme de deux polynômes
 *)
 let somme p1 p2 =
     (* On fabrique un polynôme *)
@@ -50,7 +50,7 @@ let somme p1 p2 =
         (* Somme des coefficients de degré k *)
         p.(k) <- (p1.(k) lxor p2.(k))
     done;
-    p;;
+    p
 
 (*
 * Degré d'un polynôme
@@ -61,7 +61,7 @@ let degre p =
     for k = 0 to l-1 do
         if p.(k) = 1 then d := k
     done;
-    !d;;
+    !d
 
 (*
 * Produit de deux polynômes
@@ -76,7 +76,7 @@ let produit p1 p2 =
             p.(k) <- p.(k) lxor (p1.(i) land p2.(k-i))
         done
     done;
-    p;;
+    p
 
 (*
 * Reste de la division euclidienne de
@@ -100,12 +100,12 @@ let rec reste dividende diviseur =
         reste cequonredivise diviseur
     else
         (* Sinon on ne peut pas diviser et alors le dividende est le reste *)
-        dividende;;
+        dividende
 
 (*
 * Polynôme irréductible de GF(2^8)
 *)
-let irreductible = [|1; 1; 0; 1; 1; 0; 0; 0; 1; 0; 0; 0; 0; 0; 0|];;
+let irreductible = [|1; 1; 0; 1; 1; 0; 0; 0; 1; 0; 0; 0; 0; 0; 0|]
 
 (*
 * Produit de deux nombres dans GF(2^8)
@@ -115,4 +115,4 @@ let fois a b =
     let p2 = polynome b in
     let p = produit p1 p2 in
     let r = reste p irreductible in
-    nombre r;;
+    nombre r
