@@ -17,14 +17,70 @@
 open Aes
 
 (*
+* Structure commune des ciphers
+*)
+
+class virtual cipher cle =
+    object (self)
+        val cle = cle
+
+        method virtual encrypt: int array -> int array
+        method virtual decrypt: int array -> int array
+    end
+
+(*
 * ECB
 *
 * On passe juste les données par l'algorithme
 *)
 
-let ecb_e entree cle = chiffrer entree cle
+class ecb cle =
+    object (self)
+        inherit cipher cle
 
-let ecb_d entree cle = dechiffrer entree cle
+        method encrypt entree = chiffrer entree cle
+        method decrypt entree = dechiffrer entree cle
+    end
+
+(*
+* CBC
+*
+* On ajout un vecteur d'initialisation à l'entrée
+* avant de chiffrer avec l'algorithme
+*)
+
+class cbc cle vi =
+    object (self)
+        inherit cipher cle
+        val vi = vi
+
+        method encrypt entree =
+            let xored = Array.map2 (lxor) entree vi in
+            chiffrer xored cle
+
+        method decrypt entree =
+            let decrypted = dechiffrer entree cle in
+            Array.map2 (lxor) decrypted vi
+    end
+
+(*
+* OFB
+*
+* On chiffre un vecteur d'initialisation à l'entrée
+* avant de l'ajouter à l'entrée
+*)
+
+class ofb cle vi =
+    object (self)
+        inherit cipher cle
+        val vi = vi
+
+        method encrypt entree =
+            let s = chiffrer vi cle in
+            Array.map2 (lxor) entree s
+
+        method decrypt entree = self#encrypt entree
+    end
 
 (*
 * CFB
@@ -35,8 +91,15 @@ let ecb_d entree cle = dechiffrer entree cle
 *
 * Le chiffrement et déchiffrement se fait avec la même fonction
 *)
-let cfb_e entree cle vi =
-    let s = chiffrer vi cle in
-    Array.map2 (lxor) entree s
 
-let cfb_d = cfb_e
+class cfb cle vi =
+    object (self)
+        inherit cipher cle
+        val vi = vi
+
+        method encrypt entree =
+            let s = chiffrer vi cle in
+            Array.map2 (lxor) entree s
+
+        method decrypt entree = self#encrypt entree
+    end
