@@ -58,7 +58,7 @@ let produit_colonne col inverse =
         * avec ceux d'une colonne
         *)
         for k = 0 to 3 do
-            resultat.(i) <- (fois used.(i*4 + k) col.(k)) lxor resultat.(i)
+            resultat.(i) <- (used.(i*4 + k) ** col.(k)) lxor resultat.(i)
         done
     done;
     resultat
