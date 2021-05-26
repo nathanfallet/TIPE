@@ -13,4 +13,4 @@ jobs:
       - name: Build the project
         run: cd ocaml/ && sh build.sh
       - name: Run the project and tests
-        run: ./a.out
+        run: ./ocaml/a.out
