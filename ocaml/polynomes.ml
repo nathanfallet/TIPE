@@ -69,7 +69,7 @@ let somme p1 p2 =
 		| [], p2 -> somme_rec l p2 p1
         (* On ajoute (avec un xor) les deux coefficients *)
 		| h1 :: t1, h2 :: t2 -> somme_rec ((h1 lxor h2) :: l) t1 t2
-	in simplifie (somme_rec [] p1 p2);;
+	in simplifie (somme_rec [] p1 p2)
 
 (*
 * Degré d'un polynôme
