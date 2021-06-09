@@ -65,5 +65,20 @@ let rec faire_les_tests tests =
         (* On passe aux tests suivants *)
         faire_les_tests t
 
+(* Test de performance *)
+let test_performance repeat =
+    let start = Sys.time() in
+    let c = new ecb cle in
+    for k = 0 to repeat do
+        ignore (c#encrypt entree)
+    done;
+    let stop = Sys.time() in
+    print_string "Test de performance : ";
+    print_float (stop -. start);
+    print_string "s pour ";
+    print_int repeat;
+    print_endline " blocs"
+
 (* On lance les tests *)
 let _ = faire_les_tests tests
+let _ = test_performance 100_000
