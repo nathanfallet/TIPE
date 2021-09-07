@@ -6,10 +6,7 @@
 * Permet la multiplication de nombres
 * dans GF(2^8)
 *
-* Auteurs :
-* FALLET Nathan
-* LAMIDEL Arthur
-* MAKALOU Shérif
+* Auteur : FALLET Nathan <contact@nathanfallet.me>
 *)
 
 (*

@@ -1,4 +1,4 @@
-# TIPE 2021 : FALLET Nathan, LAMIDEL Arthur, MAKALOU Shérif
+# TIPE 2021-2022
 
 ## Idées envisagées
 

@@ -5,10 +5,7 @@
 * Partie : AES - Demo
 * On fait un essaie de l'algorithme
 *
-* Auteurs :
-* FALLET Nathan
-* LAMIDEL Arthur
-* MAKALOU Shérif
+* Auteur : FALLET Nathan <contact@nathanfallet.me>
 *)
 
 (*
