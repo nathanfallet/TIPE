@@ -13,6 +13,7 @@
 *)
 
 open Ciphers
+open Images
 
 (*
 * On fait notre démonstration
@@ -47,18 +48,28 @@ let rec faire_les_tests tests =
     match tests with
     (* On a fini les tests *)
     | [] -> print_endline "Fin des tests avec succès !"
+
     (* On effectue le test en tête de liste *)
     | h :: t ->
         (* Récupère ses données *)
         let nom, cipher, check = h in
+
         (* On chiffre et on déchiffre *)
         let chiffre = cipher#encrypt entree in
         let dechiffre = cipher#decrypt chiffre in
+
         (* On vérifie que ça correspond à ce qui est attendu *)
         if chiffre = check && dechiffre = entree then
             print_endline (nom ^ " : Test réussi")
         else
             failwith (nom ^ " : Echec du test");
+
+        (* On test également le chiffrement d'images *)
+        let o = new img in
+        o#read "../images/moi.png";
+        o#crypt cipher;
+        o#write ("../images/moi_" ^ nom ^ ".png");
+        
         (* On passe aux tests suivants *)
         faire_les_tests t
 
