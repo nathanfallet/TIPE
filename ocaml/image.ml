@@ -21,9 +21,52 @@ open Ciphers
 let header = [|137; 80; 78; 71; 13; 10; 26; 10|]
 
 (*
-* Alias pour la définition d'un chunk
+* Fonction qui converti 4 chars en string et vice versa
 *)
-type chunk = int * char * char * char * char * int array * int
+let chars_to_string char1 char2 char3 char4 =
+  (String.make 1 char1) ^ (String.make 1 char2) ^ (String.make 1 char3) ^ (String.make 1 char4)
+let string_to_chars str =
+  (str.[0], str.[1], str.[2], str.[3])
+
+(*
+* Définition d'un chunk d'une image
+*)
+class chunk data chunkType =
+  object (self)
+    (* Stockage des données des chunks *)
+    val mutable data = data
+    val mutable chunkType = chunkType
+
+    (* Getters *)
+    method getData: int array = data
+    method getChunkType: string = chunkType
+
+    (* Calcul du CRC du chunk *)
+    method crc =
+      (* Initialisation de la table de CRC *)
+      let table = Array.make 256 0 in
+      for n = 0 to 255 do
+        let c = ref n in
+        for k = 0 to 7 do
+          if !c land 1 = 1 then
+            c := 0xedb88320 lxor (!c lsr 1)
+          else
+            c := !c lsr 1
+        done;
+        table.(n) <- !c
+      done;
+
+      (*
+      * Ensuite on calcul selon les données du chunk
+      * On commence par traiter le type du chunk, puis ses données
+      *)
+      let crc = ref 0xffffffff in
+      String.iter (fun x -> crc := table.((!crc lxor (Char.code x)) land 0xff) lxor (!crc lsr 8)) chunkType;
+      for n = 0 to (Array.length data) - 1 do
+        crc := table.((!crc lxor data.(n)) land 0xff) lxor (!crc lsr 8)
+      done;
+      !crc lxor 0xffffffff
+  end
 
 (*
 * Classe pour structurer les données d'une image
@@ -60,8 +103,8 @@ class img =
             let ctype3 = input_char ic in
             let ctype4 = input_char ic in
             let data = Array.init length (fun x -> input_byte ic) in
-            let crc = input_binary_int ic in
-            Queue.push (length, ctype1, ctype2, ctype3, ctype4, data, crc) chunks
+            let _ = input_binary_int ic in
+            Queue.push (new chunk data (chars_to_string ctype1 ctype2 ctype3 ctype4)) chunks
           done;
 
           (*
@@ -88,8 +131,10 @@ class img =
           *)
           while not (Queue.is_empty chunks) do
             let c = Queue.pop chunks in
-            let length, ctype1, ctype2, ctype3, ctype4, data, crc = c in
-            output_binary_int oc length;
+            let ctype1, ctype2, ctype3, ctype4 = string_to_chars c#getChunkType in
+            let data = c#getData in
+            let crc = c#crc in
+            output_binary_int oc (Array.length data);
             output_char oc ctype1;
             output_char oc ctype2;
             output_char oc ctype3;
