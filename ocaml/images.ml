@@ -76,7 +76,7 @@ class chunk data chunkType =
 
       (* On chiffre par bloc de 16, avec padding si besoin pour éviter les erreurs *)
       for k = 0 to count-1 do
-        let cLength = max 16 (length - k*16) in
+        let cLength = min 16 (length - k*16) in
         let c = Array.init 16 (fun i -> if i < cLength then data.(k*16 + i) else 0) in
         let output = cipher#encrypt c in
         for p = 0 to 15 do
