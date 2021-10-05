@@ -13,6 +13,7 @@
 *)
 
 open Ciphers
+open Deflate
 
 (*
 * Le header des fichiers PNG
@@ -66,24 +67,6 @@ class chunk data chunkType =
         crc := table.((!crc lxor data.(n)) land 0xff) lxor (!crc lsr 8)
       done;
       !crc lxor 0xffffffff
-    
-    (* Application du cipher sur l'image *)
-    method apply (cipher: cipher) =
-      (* On récupère la taille des données à traiter *)
-      let length = Array.length data in
-      let count = ((length - 1) / 16) + 1 in
-      let crypted = Array.make (count * 16) 0 in
-
-      (* On chiffre par bloc de 16, avec padding si besoin pour éviter les erreurs *)
-      for k = 0 to count-1 do
-        let cLength = min 16 (length - k*16) in
-        let c = Array.init 16 (fun i -> if i < cLength then data.(k*16 + i) else 0) in
-        let output = cipher#encrypt c in
-        for p = 0 to 15 do
-          crypted.(k*16 + p) <- output.(p)
-        done
-      done;
-      data <- crypted
   end
 
 (*
@@ -172,13 +155,68 @@ class img =
           raise e
 
     method crypt (cipher: cipher) =
-      (* On parcours les chunks pour les chiffrer *)
+      (*
+      * On parcours les chunks pour les chiffrer
+      *
+      * On isole les chunks de données IDAT pour récupérer le stream complet,
+      * le décompresser et le chiffrer, pour ensuite recréer des chunks avec
+      * les nouvelles données chiffrées.
+      *)
       let newChunks = (Queue.create(): chunk Queue.t) in
+      let isolatedIDAT = (Queue.create(): chunk Queue.t) in
+      let isolatedIDATLength = ref 0 in
       while not (Queue.is_empty chunks) do
+        (* On récupère un chunk *)
         let c = Queue.pop chunks in
-        if c#getChunkType = "IDAT" then
-          c#apply cipher;
-        Queue.push c newChunks
+
+        (* Si on a un IDAT, on l'isole pour le traiter *)
+        if c#getChunkType = "IDAT" then begin
+          isolatedIDATLength := !isolatedIDATLength + (Array.length c#getData);
+          Queue.push c isolatedIDAT
+        end
+
+        (* Une fois qu'on a fini avec les IDAT, on traite le tout *)
+        else if not (Queue.is_empty isolatedIDAT) then begin
+          (* D'abord on récupère le steam de données *)
+          let data = Array.make !isolatedIDATLength 0 in
+          let cursor = ref 0 in
+          while not (Queue.is_empty isolatedIDAT) do
+            let cIDAT = Queue.pop isolatedIDAT in
+            let cIDATData = cIDAT#getData in
+            for k = 0 to (Array.length cIDATData) - 1 do
+              data.(!cursor) <- cIDATData.(k);
+              cursor := !cursor + 1
+            done;
+          done;
+
+          (* On décompresse le stream *)
+          let decompressed = decompresser data in
+
+          (* On chiffre par bloc de 16, avec padding si besoin pour éviter les erreurs *)
+          let length = Array.length decompressed in
+          let count = ((length - 1) / 16) + 1 in
+          let crypted = Array.make (count * 16) 0 in
+          for k = 0 to count-1 do
+            let cLength = min 16 (length - k*16) in
+            let c = Array.init 16 (fun i -> if i < cLength then decompressed.(k*16 + i) else 0) in
+            let output = cipher#encrypt c in
+            for p = 0 to 15 do
+              crypted.(k*16 + p) <- output.(p)
+            done
+          done;
+
+          (* On recompresse le stream chiffré *)
+          let compressed = compresser crypted in
+
+          (* Enfin, on le remet dans des chunks *)
+          let length = Array.length compressed in
+          let count = ((length - 1) / 16384) + 1 in
+          ()
+        end;
+
+        (* On met les autres chunks dans la liste sans les toucher *)
+        if c#getChunkType <> "IDAT" then
+          Queue.push c newChunks
       done;
       chunks <- newChunks
   end
