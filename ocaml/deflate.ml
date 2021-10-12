@@ -8,6 +8,8 @@
 * Auteur : FALLET Nathan <contact@nathanfallet.me>
 *)
 
+open Huffman
+
 (*
 * Checksum pour vérifier l'intégriter des données
 *)
@@ -45,11 +47,18 @@ let decompresser entree =
     match blockType with
     (* Contenu non compressé *)
     | 0 ->
+      (* Lecture de la taille puis des données *)
       let lenght = entree.(!cursor + 1) lsl 8 lor entree.(!cursor + 2) in
       for k = 0 to lenght - 1 do
         Queue.push entree.(!cursor + 2 + k) bytes
       done;
       cursor := !cursor + lenght + 2
+    
+    | 1 | 2 ->
+      (* Lecture des arbres *)
+
+      (* Décompression des données *)
+      ()
 
     (* Type de bloc non supporté *)
     | _ -> failwith "Type de bloc de compression non supporté"
@@ -69,8 +78,11 @@ let decompresser entree =
 let compresser entree =
   (*
   * Dans notre cas, on ne va pas s'embêter, et on va enregistrer
-  * les données tel quel en ajoutant simplement le header DEFLATE
+  * les données tel quel en ajoutant simplement le header et
+  * le footer du DEFLATE
   *)
   let length = Array.length entree in
+  let alder = adler32 entree in
   let header = [|0x08; 0x1E; length lsr 8; length land 0xFF|] in
-  Array.append header entree
+  let footer = [|alder lsr 24; (alder lsr 16) land 0xFF; (alder lsr 8) land 0xFF; alder land 0xFF|] in
+  Array.append (Array.append header entree) footer
