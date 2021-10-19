@@ -50,3 +50,78 @@ let rec insererCodeHuffman tree nextBit code =
 
   (* Cas d'un code : emplacement déjà pris *)
   | Code(_) -> failwith "Erreur dans l'insertion dans l'arbre de Huffman"
+
+(*
+* Générer un arbre depuis l'association valeur vers taille de code
+*)
+let genererArbreHuffman valueToSize =
+  (*
+  * Fonction auxiliaire pour trier les codes par taille
+  * basée sur le tri par fusion
+  *)
+  let rec trierCodesParTaille codes =
+    let rec diviser liste =
+      match liste with
+      | [] -> [], []
+      | h :: [] -> [h], []
+      | h1 :: h2 :: t ->
+        let l1, l2 = diviser t in
+        (h1 :: l1, h2 :: l2) in
+    let rec fusionner l1 l2 =
+      match l1, l2 with
+      | [], _ -> l2
+      | _, [] -> l1
+      | h1 :: t1, h2 :: t2 ->
+        let x1, y1 = h1 in
+        let x2, y2 = h2 in
+        if y1 <= y2 then
+          h1 :: (fusionner t1 l2)
+        else
+          h2 :: (fusionner l1 t2) in
+    match codes with
+    | [] -> []
+    | h :: [] -> codes
+    | _ ->
+      let l1, l2 = diviser codes in
+      fusionner (trierCodesParTaille l1) (trierCodesParTaille l2) in
+  
+  (*
+  * Fonction auxiliaire pour générer un stream de bits
+  * à partir d'un code et de sa taille
+  *)
+  let createStream code size =
+    let rec aux code size stack =
+      match size with
+      | 0 ->
+        (fun () ->
+          match Stack.length stack with
+          | 0 -> failwith "Stream vide"
+          | _ -> Stack.pop stack
+        )
+      | _ -> Stack.push (code land 1) stack;
+        aux (code lsr 1) (size - 1) stack in
+    aux code size (Stack.create()) in
+    
+  (*
+  * Fonction auxiliaire principale qui génère l'arbre
+  * en parcourant les codes triés par taille
+  *)
+  let rec aux valueToSize lastCode lastCodeSize tree =
+    match valueToSize with
+    | [] -> tree
+    | h :: t ->
+      let value, currentCodeSize = h in
+      if currentCodeSize = 0 then
+        aux t lastCode lastCodeSize tree
+      else
+        let nextCode =
+          if currentCodeSize > lastCodeSize then
+            (lastCode + 1) lsl (currentCodeSize - lastCodeSize)
+          else
+            lastCode + 1
+          in
+        let newTree = insererCodeHuffman tree (createStream nextCode currentCodeSize) value in
+        aux t nextCode currentCodeSize newTree in
+
+  (* On lance le tri et on génère l'arbre *)
+  aux (trierCodesParTaille valueToSize) (-1) 0 Vide

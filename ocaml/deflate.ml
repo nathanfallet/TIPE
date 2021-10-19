@@ -43,7 +43,7 @@ let decompresser entree =
   let reading = ref true in
   while !reading do
     let firstByte = entree.(!cursor) in
-    let blockType = firstByte lsr 5 land 3 in
+    let blockType = firstByte lsr 1 land 3 in
     match blockType with
     (* Contenu non compressé *)
     | 0 ->
@@ -56,6 +56,39 @@ let decompresser entree =
     
     | 1 | 2 ->
       (* Lecture des arbres *)
+      let arbre_instructions = ref Vide in
+      let arbre_distances = ref Vide in
+
+      (* Arbre prédéfini *)
+      if blockType = 1 then begin
+        (* Arbre des instructions *)
+        let valueToSize = ref [] in
+        for value = 256 to 279 do
+          valueToSize := (value, 7) :: !valueToSize
+        done;
+        for value = 0 to 143 do
+          valueToSize := (value, 8) :: !valueToSize
+        done;
+        for value = 280 to 187 do
+          valueToSize := (value, 8) :: !valueToSize
+        done;
+        for value = 144 to 255 do
+          valueToSize := (value, 9) :: !valueToSize
+        done;
+        arbre_instructions := genererArbreHuffman !valueToSize;
+
+        (* Arbre des distances *)
+        let distances = ref [] in
+        for position = 0 to 31 do
+          distances := (position, 5) :: !distances
+        done;
+        arbre_distances := genererArbreHuffman !distances
+      end
+    
+      (* Arbre à lire dans le flux *)
+      else begin
+        failwith "Lecture dans le flux pas encore implémentée"
+      end;
 
       (* Décompression des données *)
       ()
