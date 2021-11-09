@@ -11,6 +11,44 @@
 open Huffman
 
 (*
+* Lecteur de stream auxiliaire pour lire
+* bit par bit les données
+*)
+class bitsReader data =
+  object (self)
+    (* Stockage des données à lire *)
+    val mutable data = data
+    val mutable head = 0
+    val mutable non_read_bits = 0
+    val mutable non_read_bits_size = 0
+
+    (* Aligner la tête  de lecture *)
+    method alignReader: (unit -> unit) = fun () ->
+      non_read_bits <- 0;
+      non_read_bits_size <- 0
+
+    (* Lecture d'octet *)
+    method readBytes count =
+      self#alignReader();
+      let bytes = Array.sub data head count in
+      head <- head + count;
+      bytes
+
+    (* Lecture de bits *)
+    method readBits count =
+      while non_read_bits_size < count do
+        let nextByte = self#readBytes 1 in
+        non_read_bits <- non_read_bits lor (nextByte.(0) lsl non_read_bits_size);
+        non_read_bits_size <- non_read_bits_size + 8
+      done;
+      let mask = (1 lsl count) - 1 in
+      let bits = non_read_bits land mask in
+      non_read_bits <- non_read_bits lsr count;
+      non_read_bits_size <- non_read_bits_size - count;
+      bits
+  end
+
+(*
 * Checksum pour vérifier l'intégriter des données
 *)
 let adler32 entree =
@@ -29,35 +67,40 @@ let decompresser entree =
   (*
   * Extraction du header des données compressées
   *)
-  let cm = entree.(0) land 15 in
-  let fdict = entree.(1) lsr 5 land 1 = 1 in
+  let reader = new bitsReader entree in
+  let cm = reader#readBits 4 in
+  let _ = reader#readBits 4 in
+  let _ = reader#readBits 5 in
+  let fdict = reader#readBits 1 in
+  let _ = reader#readBits 2 in
 
   (* On effectue quelques vérifications *)
   if cm <> 8 then failwith "Seulement le DEFLATE est supporté";
   if (entree.(0) lsl 8 lor entree.(1)) mod 31 <> 0 then failwith "FCHECK invalide";
-  if fdict then failwith "FDICT non supporté";
+  if fdict = 1 then failwith "FDICT non supporté";
 
   (* Lecture des données octet par octet *)
   let bytes = Queue.create() in
-  let cursor = ref 2 in
   let reading = ref true in
   while !reading do
-    let firstByte = entree.(!cursor) in
-    let blockType = firstByte lsr 1 land 3 in
+    let leftBlocks = reader#readBits 1 in
+    let blockType = reader#readBits 2 in
     match blockType with
     (* Contenu non compressé *)
     | 0 ->
       (* Lecture de la taille puis des données *)
-      let lenght = entree.(!cursor + 1) lsl 8 lor entree.(!cursor + 2) in
-      for k = 0 to lenght - 1 do
-        Queue.push entree.(!cursor + 2 + k) bytes
-      done;
-      cursor := !cursor + lenght + 2
+      reader#alignReader();
+      let lenght = reader#readBits 16 in
+      assert (((reader#readBits 16) lxor 0xffff) = lenght);
+      for _ = 0 to lenght - 1 do
+        Queue.push (reader#readBits 8) bytes
+      done
     
     | 1 | 2 ->
       (* Lecture des arbres *)
       let arbre_instructions = ref Vide in
       let arbre_distances = ref Vide in
+      let arbre_tailles = ref Vide in
 
       (* Arbre prédéfini *)
       if blockType = 1 then begin
@@ -87,7 +130,16 @@ let decompresser entree =
     
       (* Arbre à lire dans le flux *)
       else begin
-        failwith "Lecture dans le flux pas encore implémentée"
+        let arbre_instructions_size = (reader#readBits 5) + 257 in
+        let arbre_distances_size = (reader#readBits 5) + 1 in
+        let arbre_tailles_size = (reader#readBits 4) + 4 in
+        let ordered_values = [|16; 17; 18; 0; 8; 7; 9; 6; 10; 5; 11; 4; 12; 3; 13; 2; 14; 1; 15|] in
+        let arbre_tailles_valueToSize = ref [] in
+        for position = 0 to arbre_tailles_size - 1 do
+          let truePosition = ordered_values.(position) in
+          arbre_tailles_valueToSize := (truePosition, reader#readBits 3) :: !arbre_tailles_valueToSize
+        done;
+        arbre_tailles := genererArbreHuffman !arbre_tailles_valueToSize;
       end;
 
       (* Décompression des données *)
