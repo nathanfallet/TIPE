@@ -68,6 +68,7 @@ let decompresser entree =
   * Extraction du header des données compressées
   *)
   let reader = new bitsReader entree in
+  let stream = fun () -> reader#readBits 1 in
   let cm = reader#readBits 4 in
   let _ = reader#readBits 4 in
   let _ = reader#readBits 5 in
@@ -90,9 +91,9 @@ let decompresser entree =
     | 0 ->
       (* Lecture de la taille puis des données *)
       reader#alignReader();
-      let lenght = reader#readBits 16 in
-      assert (((reader#readBits 16) lxor 0xffff) = lenght);
-      for _ = 0 to lenght - 1 do
+      let length = reader#readBits 16 in
+      assert (((reader#readBits 16) lxor 0xffff) = length);
+      for _ = 0 to length - 1 do
         Queue.push (reader#readBits 8) bytes
       done
     
@@ -130,9 +131,12 @@ let decompresser entree =
     
       (* Arbre à lire dans le flux *)
       else begin
+        (* Lecture des tailles *)
         let arbre_instructions_size = (reader#readBits 5) + 257 in
         let arbre_distances_size = (reader#readBits 5) + 1 in
         let arbre_tailles_size = (reader#readBits 4) + 4 in
+
+        (* Arbre des tailles *)
         let ordered_values = [|16; 17; 18; 0; 8; 7; 9; 6; 10; 5; 11; 4; 12; 3; 13; 2; 14; 1; 15|] in
         let arbre_tailles_valueToSize = ref [] in
         for position = 0 to arbre_tailles_size - 1 do
@@ -140,10 +144,54 @@ let decompresser entree =
           arbre_tailles_valueToSize := (truePosition, reader#readBits 3) :: !arbre_tailles_valueToSize
         done;
         arbre_tailles := genererArbreHuffman !arbre_tailles_valueToSize;
+
+        (* Génération de n tailles de code *)
+        let rec repeat element n =
+          match n with
+          | 0 -> []
+          | _ -> element :: (repeat element (n-1)) in
+        let rec enumerate l counter =
+          match l with
+          | h :: t -> (counter, h) :: (enumerate t (counter + 1))
+          | [] -> [] in
+        let rec getNValueToSize valueToSize n =
+          match n with
+          | 0 -> enumerate (List.rev valueToSize) 0
+          | _ ->
+            let code_de_taille = trouverCodeHuffman !arbre_tailles stream in
+            (
+              match code_de_taille with
+              | 16 ->
+                let lastValue = List.hd valueToSize in
+                let times = 3 + (reader#readBits 2) in
+                (getNValueToSize ((repeat lastValue times) @ valueToSize) (n-1))
+              | 17 ->
+                let times = 3 + (reader#readBits 3) in
+                (getNValueToSize ((repeat 0 times) @ valueToSize) (n-1))
+              | 18 ->
+                let times = 11 + (reader#readBits 7) in
+                (getNValueToSize ((repeat 0 times) @ valueToSize) (n-1))
+              | _ ->
+                (getNValueToSize (code_de_taille :: valueToSize) (n-1))
+            ) in
+
+        (* Arbre des instructions *)
+        arbre_instructions := genererArbreHuffman (getNValueToSize [] arbre_instructions_size);
+
+        (* Arbre des distances *)
+        arbre_distances := genererArbreHuffman (getNValueToSize [] arbre_distances_size)
       end;
 
       (* Décompression des données *)
-      ()
+      let decoding = ref true in
+      while !decoding do
+        let code = trouverCodeHuffman !arbre_instructions stream in
+        match code with
+        | 256 -> decoding := false
+        | code when code < 256 -> Queue.push code bytes
+        | _ ->
+          ()
+      done
 
     (* Type de bloc non supporté *)
     | _ -> failwith "Type de bloc de compression non supporté"
