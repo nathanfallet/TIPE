@@ -43,10 +43,18 @@ let rec insererCodeHuffman tree nextBit code =
     if bit = 0 then
       Node(insererCodeHuffman left nextBit code, right)
     else
-      Node(insererCodeHuffman right nextBit code, left)
+      Node(left, insererCodeHuffman right nextBit code)
 
   (* Cas du vide : on insert le code *)
-  | Vide -> Code(code)
+  | Vide ->
+    (try
+      let bit = nextBit() in
+      if bit = 0 then
+        Node(insererCodeHuffman Vide nextBit code, Vide)
+      else
+        Node(Vide, insererCodeHuffman Vide nextBit code)
+    with
+      Failure(_) -> Code(code))
 
   (* Cas d'un code : emplacement déjà pris *)
   | Code(_) -> failwith "Erreur dans l'insertion dans l'arbre de Huffman"
@@ -115,7 +123,8 @@ let genererArbreHuffman valueToSize =
         aux t lastCode lastCodeSize tree
       else
         let nextCode =
-          if currentCodeSize > lastCodeSize then
+          if lastCode = -1 then 0
+          else if currentCodeSize > lastCodeSize then
             (lastCode + 1) lsl (currentCodeSize - lastCodeSize)
           else
             lastCode + 1

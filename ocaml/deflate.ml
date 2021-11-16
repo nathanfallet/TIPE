@@ -112,7 +112,7 @@ let decompresser entree =
         for value = 0 to 143 do
           valueToSize := (value, 8) :: !valueToSize
         done;
-        for value = 280 to 187 do
+        for value = 280 to 287 do
           valueToSize := (value, 8) :: !valueToSize
         done;
         for value = 144 to 255 do
