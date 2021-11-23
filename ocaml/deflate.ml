@@ -37,8 +37,9 @@ class bitsReader data =
     (* Lecture de bits *)
     method readBits count =
       while non_read_bits_size < count do
-        let nextByte = self#readBytes 1 in
-        non_read_bits <- non_read_bits lor (nextByte.(0) lsl non_read_bits_size);
+        let nextByte = data.(head) in
+        head <- head + 1;
+        non_read_bits <- non_read_bits lor (nextByte lsl non_read_bits_size);
         non_read_bits_size <- non_read_bits_size + 8
       done;
       let mask = (1 lsl count) - 1 in
@@ -78,7 +79,7 @@ let decompresser entree =
   (* On effectue quelques vérifications *)
   if cm <> 8 then failwith "Seulement le DEFLATE est supporté";
   if (entree.(0) lsl 8 lor entree.(1)) mod 31 <> 0 then failwith "FCHECK invalide";
-  if fdict = 1 then failwith "FDICT non supporté";
+  if fdict = 1 then ignore(reader#readBits 32);
 
   (* Lecture des données octet par octet *)
   let bytes = Queue.create() in
@@ -188,10 +189,26 @@ let decompresser entree =
         while !decoding do
           let code = trouverCodeHuffman !arbre_instructions stream in
           match code with
+          (* Cas d'arrêt et de lecture simple *)
           | 256 -> decoding := false
           | code when code < 256 -> Queue.push code bytes
+
+          (* Cas de répétition *)
           | _ ->
-            ()
+            let taille_repetition = ref 0 in
+            let distance = ref 0 in
+            if code < 265 then
+              taille_repetition := 3 + (code - 257)
+            else if code < 285 then
+              let extra_bits = 1 + ((code - 265) lsr 2) in
+              taille_repetition := 3 + ((4 lor ((code - 265) land 3)) lsl extra_bits) + reader#readBits(extra_bits);
+            let code_distance = trouverCodeHuffman !arbre_instructions stream in
+            if code_distance < 4 then
+              distance := 1 + code_distance
+            else
+              let extra_bits = 1 + ((code_distance - 4) lsr 1) in
+              distance := 1 + ((2 lor ((code_distance - 2) land 1)) lsl extra_bits) + reader#readBits(extra_bits);
+            
         done
 
       (* Type de bloc non supporté *)
