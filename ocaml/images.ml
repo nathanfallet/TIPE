@@ -211,7 +211,11 @@ class img =
           (* Enfin, on le remet dans des chunks *)
           let length = Array.length compressed in
           let count = ((length - 1) / 16384) + 1 in
-          ()
+          for k = 0 to count-1 do
+            let cstart = k*16384 in
+            let cdata = Array.sub compressed cstart (min 16384 (length-cstart)) in
+            Queue.push (new chunk cdata "IDAT") newChunks
+          done
         end;
 
         (* On met les autres chunks dans la liste sans les toucher *)

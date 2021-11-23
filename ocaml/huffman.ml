@@ -82,7 +82,7 @@ let genererArbreHuffman valueToSize =
       | h1 :: t1, h2 :: t2 ->
         let x1, y1 = h1 in
         let x2, y2 = h2 in
-        if y1 <= y2 then
+        if y1 < y2 || (y1 = y2 && x1 < x2) then
           h1 :: (fusionner t1 l2)
         else
           h2 :: (fusionner l1 t2) in
