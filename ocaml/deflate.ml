@@ -158,7 +158,7 @@ let decompresser entree =
             | [] -> [] in
           let rec getNValueToSize valueToSize n =
             match n with
-            | 0 -> enumerate (List.rev valueToSize) 0
+            | n when n <= 0 -> enumerate (List.rev valueToSize) 0
             | _ ->
               let code_de_taille = trouverCodeHuffman !arbre_tailles stream in
               (
@@ -166,13 +166,13 @@ let decompresser entree =
                 | 16 ->
                   let lastValue = List.hd valueToSize in
                   let times = 3 + (reader#readBits 2) in
-                  (getNValueToSize ((repeat lastValue times) @ valueToSize) (n-1))
+                  (getNValueToSize ((repeat lastValue times) @ valueToSize) (n-times))
                 | 17 ->
                   let times = 3 + (reader#readBits 3) in
-                  (getNValueToSize ((repeat 0 times) @ valueToSize) (n-1))
+                  (getNValueToSize ((repeat 0 times) @ valueToSize) (n-times))
                 | 18 ->
                   let times = 11 + (reader#readBits 7) in
-                  (getNValueToSize ((repeat 0 times) @ valueToSize) (n-1))
+                  (getNValueToSize ((repeat 0 times) @ valueToSize) (n-times))
                 | _ ->
                   (getNValueToSize (code_de_taille :: valueToSize) (n-1))
               ) in
