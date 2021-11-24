@@ -197,17 +197,21 @@ let decompresser entree =
           | _ ->
             let taille_repetition = ref 0 in
             let distance = ref 0 in
-            if code < 265 then
-              taille_repetition := 3 + (code - 257)
-            else if code < 285 then
-              let extra_bits = 1 + ((code - 265) lsr 2) in
-              taille_repetition := 3 + ((4 lor ((code - 265) land 3)) lsl extra_bits) + reader#readBits(extra_bits);
-            let code_distance = trouverCodeHuffman !arbre_instructions stream in
-            if code_distance < 4 then
-              distance := 1 + code_distance
-            else
-              let extra_bits = 1 + ((code_distance - 4) lsr 1) in
-              distance := 1 + ((2 lor ((code_distance - 2) land 1)) lsl extra_bits) + reader#readBits(extra_bits);
+            (
+              if code < 265 then
+                taille_repetition := 3 + (code - 257)
+              else if code < 285 then
+                let extra_bits = 1 + ((code - 265) lsr 2) in
+                taille_repetition := 3 + ((4 lor ((code - 265) land 3)) lsl extra_bits) + (reader#readBits extra_bits)
+            );
+            let code_distance = trouverCodeHuffman !arbre_distances stream in
+            (
+              if code_distance < 4 then
+                distance := 1 + code_distance
+              else
+                let extra_bits = 1 + ((code_distance - 4) lsr 1) in
+                distance := 1 + ((2 lor ((code_distance - 2) land 1)) lsl extra_bits) + (reader#readBits extra_bits)
+            );
             
         done
 
@@ -216,9 +220,10 @@ let decompresser entree =
     );
 
     (* On regarde si on a fini *)
-    if leftBlocks = 1 then
-      reading := false;
-      reader#alignReader()
+    if leftBlocks = 1 then begin
+      reader#alignReader();
+      reading := false
+    end
   done;
 
   (* Extraction des données dans un tableau *)
