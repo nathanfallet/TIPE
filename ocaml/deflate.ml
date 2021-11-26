@@ -100,6 +100,28 @@ let getNValueToSize n arbre_tailles reader =
   in aux [] n
 
 (*
+* Répéter une portion de queue via la distance et la taille
+*)
+let repeatInQueue queue distance taille_repetition =
+  let result = Array.make taille_repetition 0 in
+  let copied = Queue.copy queue in
+  let length = Queue.length queue in
+  let start = length - distance in
+  for k = 0 to start - 1 do
+    ignore(Queue.pop copied)
+  done;
+  for k = 0 to taille_repetition - 1 do
+    let element =
+      if Queue.is_empty copied then
+        result.(k mod (taille_repetition - distance))
+      else
+        Queue.pop copied
+    in
+    result.(k) <- element;
+    Queue.push result.(k) queue
+  done
+
+(*
 * Permet de décompresser un flux de données
 *)
 let decompresser entree =
@@ -219,7 +241,7 @@ let decompresser entree =
                 let extra_bits = 1 + ((code_distance - 4) lsr 1) in
                 distance := 1 + ((2 lor ((code_distance - 2) land 1)) lsl extra_bits) + (reader#readBits extra_bits)
             );
-            
+            repeatInQueue bytes !distance !taille_repetition
         done
 
       (* Type de bloc non supporté *)
