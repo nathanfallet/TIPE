@@ -100,26 +100,26 @@ let getNValueToSize n arbre_tailles reader =
   in aux [] n
 
 (*
-* Répéter une portion de queue via la distance et la taille
+* Répéter une portion d'une liste via la distance et la taille
 *)
-let repeatInQueue queue distance taille_repetition =
-  let result = Array.make taille_repetition 0 in
-  let copied = Queue.copy queue in
-  let length = Queue.length queue in
-  let start = length - distance in
-  for k = 0 to start - 1 do
-    ignore(Queue.pop copied)
-  done;
-  for k = 0 to taille_repetition - 1 do
-    let element =
-      if Queue.is_empty copied then
-        result.(k mod (taille_repetition - distance))
-      else
-        Queue.pop copied
-    in
-    result.(k) <- element;
-    Queue.push result.(k) queue
-  done
+let repeatInList l distance taille_repetition =
+  let rec generateBuffer distance l acc =
+    match distance, l with
+    | 0, _ -> acc
+    | _, h :: t when distance <= taille_repetition ->
+      generateBuffer (distance - 1) t (h :: acc)
+    | _, h :: t ->
+      generateBuffer (distance - 1) t acc
+    | _, _ -> acc in
+  let rec repeatFromBuffer buffer acc left originalBuffer =
+    match left, buffer with
+    | 0, _ -> acc
+    | _, h :: t ->
+      repeatFromBuffer t (h :: acc) (left - 1) originalBuffer
+    | _, [] ->
+      repeatFromBuffer originalBuffer acc left originalBuffer in
+  let buffer = generateBuffer distance l [] in
+  repeatFromBuffer buffer [] taille_repetition buffer
 
 (*
 * Permet de décompresser un flux de données
@@ -141,7 +141,7 @@ let decompresser entree =
   if fdict = 1 then ignore(reader#readBits 32);
 
   (* Lecture des données octet par octet *)
-  let bytes = Queue.create() in
+  let bytes = ref [] in
   let reading = ref true in
   while !reading do
     let leftBlocks = reader#readBits 1 in
@@ -155,7 +155,7 @@ let decompresser entree =
         let length = reader#readBits 16 in
         assert (((reader#readBits 16) lxor 0xffff) = length);
         for _ = 0 to length - 1 do
-          Queue.push (reader#readBits 8) bytes
+          bytes := (reader#readBits 8) :: !bytes
         done
       
       | 1 | 2 ->
@@ -220,7 +220,7 @@ let decompresser entree =
           match code with
           (* Cas d'arrêt et de lecture simple *)
           | 256 -> decoding := false
-          | code when code < 256 -> Queue.push code bytes
+          | code when code < 256 -> bytes := code :: !bytes
 
           (* Cas de répétition *)
           | _ ->
@@ -241,7 +241,7 @@ let decompresser entree =
                 let extra_bits = 1 + ((code_distance - 4) lsr 1) in
                 distance := 1 + ((2 lor ((code_distance - 2) land 1)) lsl extra_bits) + (reader#readBits extra_bits)
             );
-            repeatInQueue bytes !distance !taille_repetition
+            bytes := (repeatInList !bytes !distance !taille_repetition) @ !bytes
         done
 
       (* Type de bloc non supporté *)
@@ -256,10 +256,11 @@ let decompresser entree =
   done;
 
   (* Extraction des données dans un tableau *)
-  let length = Queue.length bytes in
+  let length = List.length !bytes in
   let data = Array.make length 0 in
   for k = 0 to length - 1 do
-    data.(k) <- Queue.pop bytes
+    data.(length - k - 1) <- List.hd !bytes;
+    bytes := List.tl !bytes
   done;
   data
 
