@@ -69,6 +69,7 @@ let rec faire_les_tests tests =
         o#read "./images/moi.png";
         o#crypt cipher;
         o#write ("./images/moi_" ^ nom ^ ".png");
+        print_endline (nom ^ " : Image chiffrée");
         
         (* On passe aux tests suivants *)
         faire_les_tests t

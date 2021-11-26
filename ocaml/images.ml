@@ -195,12 +195,12 @@ class img =
           (* On chiffre par bloc de 16, avec padding si besoin pour éviter les erreurs *)
           let length = Array.length decompressed in
           let count = ((length - 1) / 16) + 1 in
-          let crypted = Array.make (count * 16) 0 in
-          for k = 0 to count-1 do
+          let crypted = Array.make length 0 in
+          for k = 0 to count - 1 do
             let cLength = min 16 (length - k*16) in
             let c = Array.init 16 (fun i -> if i < cLength then decompressed.(k*16 + i) else 0) in
             let output = cipher#encrypt c in
-            for p = 0 to 15 do
+            for p = 0 to cLength - 1 do
               crypted.(k*16 + p) <- output.(p)
             done
           done;
