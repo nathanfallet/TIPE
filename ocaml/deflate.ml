@@ -47,6 +47,10 @@ class bitsReader data =
       non_read_bits <- non_read_bits lsr count;
       non_read_bits_size <- non_read_bits_size - count;
       bits
+
+    (* Création d'un stream *)
+    method stream =
+      fun () -> self#readBits 1
   end
 
 (*
@@ -61,6 +65,40 @@ let adler32 entree =
   done;
   ((!somme2 mod 65521) lsl 16) lor (!somme1 mod 65521)
 
+(* 
+* Génération de n tailles de code
+*)
+let getNValueToSize n arbre_tailles reader =
+  let rec repeat element n =
+    match n with
+    | 0 -> []
+    | _ -> element :: (repeat element (n-1)) in
+  let rec enumerate l counter =
+    match l with
+    | h :: t -> (counter, h) :: (enumerate t (counter + 1))
+    | [] -> [] in
+  let rec aux valueToSize n =
+    match n with
+    | n when n <= 0 -> enumerate (List.rev valueToSize) 0
+    | _ ->
+      let code_de_taille = trouverCodeHuffman arbre_tailles reader#stream in
+      (
+        match code_de_taille with
+        | 16 ->
+          let lastValue = List.hd valueToSize in
+          let times = 3 + (reader#readBits 2) in
+          (aux ((repeat lastValue times) @ valueToSize) (n-times))
+        | 17 ->
+          let times = 3 + (reader#readBits 3) in
+          (aux ((repeat 0 times) @ valueToSize) (n-times))
+        | 18 ->
+          let times = 11 + (reader#readBits 7) in
+          (aux ((repeat 0 times) @ valueToSize) (n-times))
+        | _ ->
+          (aux (code_de_taille :: valueToSize) (n-1))
+      )
+  in aux [] n
+
 (*
 * Permet de décompresser un flux de données
 *)
@@ -69,7 +107,6 @@ let decompresser entree =
   * Extraction du header des données compressées
   *)
   let reader = new bitsReader entree in
-  let stream = fun () -> reader#readBits 1 in
   let cm = reader#readBits 4 in
   let _ = reader#readBits 4 in
   let _ = reader#readBits 5 in
@@ -147,47 +184,17 @@ let decompresser entree =
           done;
           arbre_tailles := genererArbreHuffman !arbre_tailles_valueToSize;
 
-          (* Génération de n tailles de code *)
-          let rec repeat element n =
-            match n with
-            | 0 -> []
-            | _ -> element :: (repeat element (n-1)) in
-          let rec enumerate l counter =
-            match l with
-            | h :: t -> (counter, h) :: (enumerate t (counter + 1))
-            | [] -> [] in
-          let rec getNValueToSize valueToSize n =
-            match n with
-            | n when n <= 0 -> enumerate (List.rev valueToSize) 0
-            | _ ->
-              let code_de_taille = trouverCodeHuffman !arbre_tailles stream in
-              (
-                match code_de_taille with
-                | 16 ->
-                  let lastValue = List.hd valueToSize in
-                  let times = 3 + (reader#readBits 2) in
-                  (getNValueToSize ((repeat lastValue times) @ valueToSize) (n-times))
-                | 17 ->
-                  let times = 3 + (reader#readBits 3) in
-                  (getNValueToSize ((repeat 0 times) @ valueToSize) (n-times))
-                | 18 ->
-                  let times = 11 + (reader#readBits 7) in
-                  (getNValueToSize ((repeat 0 times) @ valueToSize) (n-times))
-                | _ ->
-                  (getNValueToSize (code_de_taille :: valueToSize) (n-1))
-              ) in
-
           (* Arbre des instructions *)
-          arbre_instructions := genererArbreHuffman (getNValueToSize [] arbre_instructions_size);
+          arbre_instructions := genererArbreHuffman (getNValueToSize arbre_instructions_size !arbre_tailles reader);
 
           (* Arbre des distances *)
-          arbre_distances := genererArbreHuffman (getNValueToSize [] arbre_distances_size)
+          arbre_distances := genererArbreHuffman (getNValueToSize arbre_distances_size !arbre_tailles reader)
         end;
 
         (* Décompression des données *)
         let decoding = ref true in
         while !decoding do
-          let code = trouverCodeHuffman !arbre_instructions stream in
+          let code = trouverCodeHuffman !arbre_instructions reader#stream in
           match code with
           (* Cas d'arrêt et de lecture simple *)
           | 256 -> decoding := false
@@ -204,7 +211,7 @@ let decompresser entree =
                 let extra_bits = 1 + ((code - 265) lsr 2) in
                 taille_repetition := 3 + ((4 lor ((code - 265) land 3)) lsl extra_bits) + (reader#readBits extra_bits)
             );
-            let code_distance = trouverCodeHuffman !arbre_distances stream in
+            let code_distance = trouverCodeHuffman !arbre_distances reader#stream in
             (
               if code_distance < 4 then
                 distance := 1 + code_distance
