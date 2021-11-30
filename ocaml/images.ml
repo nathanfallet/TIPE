@@ -162,6 +162,8 @@ class img =
       * le décompresser et le chiffrer, pour ensuite recréer des chunks avec
       * les nouvelles données chiffrées.
       *)
+      let width = ref 0 in
+      let height = ref 0 in
       let newChunks = (Queue.create(): chunk Queue.t) in
       let isolatedIDAT = (Queue.create(): chunk Queue.t) in
       let isolatedIDATLength = ref 0 in
@@ -169,8 +171,15 @@ class img =
         (* On récupère un chunk *)
         let c = Queue.pop chunks in
 
+        (* On décode les infos du header *)
+        if c#getChunkType = "IHDR" then begin
+          let ihdr = c#getData in
+          width := (ihdr.(0) lsl 24) lor (ihdr.(1) lsl 16) lor (ihdr.(2) lsl 8) lor (ihdr.(3));
+          height := (ihdr.(4) lsl 24) lor (ihdr.(5) lsl 16) lor (ihdr.(6) lsl 8) lor (ihdr.(7))
+        end
+
         (* Si on a un IDAT, on l'isole pour le traiter *)
-        if c#getChunkType = "IDAT" then begin
+        else if c#getChunkType = "IDAT" then begin
           isolatedIDATLength := !isolatedIDATLength + (Array.length c#getData);
           Queue.push c isolatedIDAT
         end
@@ -206,7 +215,9 @@ class img =
           done;
 
           (* On force une filter method, sinon l'image n'est pas lisible *)
-          crypted.(0) <- 0;
+          for k = 0 to !height - 1 do
+            crypted.(k * (4 * (!width) + 1)) <- 0
+          done;
 
           (* On recompresse le stream chiffré *)
           let compressed = compresser crypted in
