@@ -205,6 +205,9 @@ class img =
             done
           done;
 
+          (* On force une filter method, sinon l'image n'est pas lisible *)
+          crypted.(0) <- 0;
+
           (* On recompresse le stream chiffré *)
           let compressed = compresser crypted in
 

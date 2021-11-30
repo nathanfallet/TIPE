@@ -153,7 +153,8 @@ let decompresser entree =
         (* Lecture de la taille puis des données *)
         reader#alignReader();
         let length = reader#readBits 16 in
-        assert (((reader#readBits 16) lxor 0xffff) = length);
+        let invertedLength = (reader#readBits 16) lxor 0xffff in
+        assert (invertedLength = length);
         for _ = 0 to length - 1 do
           bytes := (reader#readBits 8) :: !bytes
         done
@@ -273,8 +274,18 @@ let compresser entree =
   * les données tel quel en ajoutant simplement le header et
   * le footer du DEFLATE
   *)
+  let out = ref [||] in
   let length = Array.length entree in
+  let count = ((length - 1) / 16384) + 1 in
+  for k = 0 to count-1 do
+    let cstart = k*16384 in
+    let cdata = Array.sub entree cstart (min 16384 (length-cstart)) in
+    let clength = Array.length cdata in
+    let invertedLength = clength lxor 0xffff in
+    let cheader = [|if k = count-1 then 1 else 0; clength land 0xFF; clength lsr 8; invertedLength land 0xFF; invertedLength lsr 8|] in
+    out := Array.append !out (Array.append cheader cdata)
+  done;
   let alder = adler32 entree in
-  let header = [|0x08; 0x1E; length lsr 8; length land 0xFF|] in
+  let header = [|0x08; 0x1D|] in
   let footer = [|alder lsr 24; (alder lsr 16) land 0xFF; (alder lsr 8) land 0xFF; alder land 0xFF|] in
-  Array.append (Array.append header entree) footer
+  Array.append (Array.append header !out) footer
