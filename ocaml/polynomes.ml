@@ -6,10 +6,7 @@
 * Permet la multiplication de nombres
 * dans GF(2^8)
 *
-* Auteurs :
-* FALLET Nathan
-* LAMIDEL Arthur
-* MAKALOU Shérif
+* Auteur : FALLET Nathan <contact@nathanfallet.me>
 *)
 
 (*
@@ -135,6 +132,10 @@ let irreductible = [1; 1; 0; 1; 1; 0; 0; 0; 1]
 * Produit de deux nombres dans GF(2^8)
 *)
 let ( ** ) a b =
+    (* Pour simplifier le calcul, on traite le cas où a = 1 ou b = 1 avant *)
+    if a = 1 then b else
+    if b = 1 then a else
+    (* Autrement, on effectue la conversion et on calcul *)
     let p1 = polynome a in
     let p2 = polynome b in
     let p = produit p1 p2 in
