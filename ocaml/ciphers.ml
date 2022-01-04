@@ -49,15 +49,19 @@ class ecb cle =
 class cbc cle vi =
     object (self)
         inherit cipher cle
-        val vi = vi
+        val mutable vi = vi
 
         method encrypt entree =
             let xored = Array.map2 (lxor) entree vi in
-            chiffrer xored cle
+            let output = chiffrer xored cle in
+            vi <- output;
+            output
 
         method decrypt entree =
             let decrypted = dechiffrer entree cle in
-            Array.map2 (lxor) decrypted vi
+            let output = Array.map2 (lxor) decrypted vi in
+            vi <- entree;
+            output
     end
 
 (*
@@ -70,11 +74,13 @@ class cbc cle vi =
 class ofb cle vi =
     object (self)
         inherit cipher cle
-        val vi = vi
+        val mutable vi = vi
 
         method encrypt entree =
             let s = chiffrer vi cle in
-            Array.map2 (lxor) entree s
+            let output = Array.map2 (lxor) entree s in
+            vi <- s;
+            output
 
         method decrypt entree = self#encrypt entree
     end
@@ -86,17 +92,24 @@ class ofb cle vi =
 * On chiffre le vecteur d'initialisation et on
 * applique un ou exclusif sur l'entrée
 *
-* Le chiffrement et déchiffrement se fait avec la même fonction
+* Le chiffrement et déchiffrement se fait avec la même fonction,
+* mais la mise à jour du vecteur d'initialisation est différente
 *)
 
 class cfb cle vi =
     object (self)
         inherit cipher cle
-        val vi = vi
+        val mutable vi = vi
 
         method encrypt entree =
             let s = chiffrer vi cle in
-            Array.map2 (lxor) entree s
+            let output = Array.map2 (lxor) entree s in
+            vi <- output;
+            output
 
-        method decrypt entree = self#encrypt entree
+        method decrypt entree =
+            let s = chiffrer vi cle in
+            let output = Array.map2 (lxor) entree s in
+            vi <- entree;
+            output
     end
