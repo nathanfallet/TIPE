@@ -88,12 +88,12 @@ let rec faire_les_tests tests =
         let o = new healthData in
         o#read "./files/health.json";
         o#crypt cipher_encrypt;
-        o#write ("./files/health_" ^ nom ^ ".json");
+        o#write ("./files/health_" ^ nom ^ ".bin");
         print_endline (nom ^ " : Données de santé chiffrées");
 
         (* Que l'on déchiffre pour vérifier *)
         let o = new healthData in
-        o#read ("./files/health_" ^ nom ^ ".json");
+        o#read ("./files/health_" ^ nom ^ ".bin");
         o#decrypt cipher_decrypt;
         o#write ("./files/health_" ^ nom ^ "_decrypted.json");
         print_endline (nom ^ " : Données de santé déchiffrées");

@@ -7,4 +7,5 @@
 *.cmx
 *.o
 *_*.png
+*_*.bin
 *_*.json
