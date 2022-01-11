@@ -18,15 +18,15 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           path: |
-            moi_ECB.png
-            moi_CBC.png
-            moi_OFB.png
-            moi_CFB.png
-            health_ECB.bin
-            health_CBC.bin
-            health_OFB.bin
-            health_CFB.bin
-            health_ECB_decrypted.json
-            health_CBC_decrypted.json
-            health_OFB_decrypted.json
-            health_CFB_decrypted.json
+            files/moi_ECB.png
+            files/moi_CBC.png
+            files/moi_OFB.png
+            files/moi_CFB.png
+            files/health_ECB.bin
+            files/health_CBC.bin
+            files/health_OFB.bin
+            files/health_CFB.bin
+            files/health_ECB_decrypted.json
+            files/health_CBC_decrypted.json
+            files/health_OFB_decrypted.json
+            files/health_CFB_decrypted.json
