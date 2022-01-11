@@ -1,0 +1,188 @@
+[
+    {
+      "stand" : 14,
+      "move" : 283,
+      "exercise" : 13,
+      "date" : "2020-07-01"
+    },
+    {
+      "stand" : 16,
+      "move" : 274,
+      "exercise" : 6,
+      "date" : "2020-07-02"
+    },
+    {
+      "stand" : 16,
+      "move" : 484,
+      "exercise" : 38,
+      "date" : "2020-07-03"
+    },
+    {
+      "stand" : 13,
+      "move" : 299,
+      "exercise" : 24,
+      "date" : "2020-07-04"
+    },
+    {
+      "stand" : 14,
+      "move" : 378,
+      "exercise" : 30,
+      "date" : "2020-07-05"
+    },
+    {
+      "stand" : 15,
+      "move" : 769,
+      "exercise" : 79,
+      "date" : "2020-07-06"
+    },
+    {
+      "stand" : 16,
+      "move" : 421,
+      "exercise" : 24,
+      "date" : "2020-07-07"
+    },
+    {
+      "stand" : 17,
+      "move" : 869,
+      "exercise" : 190,
+      "date" : "2020-07-08"
+    },
+    {
+      "stand" : 17,
+      "move" : 428,
+      "exercise" : 32,
+      "date" : "2020-07-09"
+    },
+    {
+      "stand" : 16,
+      "move" : 338,
+      "exercise" : 12,
+      "date" : "2020-07-10"
+    },
+    {
+      "stand" : 15,
+      "move" : 467,
+      "exercise" : 33,
+      "date" : "2020-07-11"
+    },
+    {
+      "stand" : 13,
+      "move" : 387,
+      "exercise" : 17,
+      "date" : "2020-07-12"
+    },
+    {
+      "stand" : 17,
+      "move" : 356,
+      "exercise" : 7,
+      "date" : "2020-07-13"
+    },
+    {
+      "stand" : 18,
+      "move" : 422,
+      "exercise" : 16,
+      "date" : "2020-07-14"
+    },
+    {
+      "stand" : 12,
+      "move" : 249,
+      "exercise" : 4,
+      "date" : "2020-07-15"
+    },
+    {
+      "stand" : 16,
+      "move" : 279,
+      "exercise" : 6,
+      "date" : "2020-07-16"
+    },
+    {
+      "stand" : 16,
+      "move" : 857,
+      "exercise" : 70,
+      "date" : "2020-07-17"
+    },
+    {
+      "stand" : 18,
+      "move" : 560,
+      "exercise" : 68,
+      "date" : "2020-07-18"
+    },
+    {
+      "stand" : 15,
+      "move" : 539,
+      "exercise" : 60,
+      "date" : "2020-07-19"
+    },
+    {
+      "stand" : 16,
+      "move" : 802,
+      "exercise" : 69,
+      "date" : "2020-07-20"
+    },
+    {
+      "stand" : 17,
+      "move" : 448,
+      "exercise" : 38,
+      "date" : "2020-07-21"
+    },
+    {
+      "stand" : 16,
+      "move" : 803,
+      "exercise" : 77,
+      "date" : "2020-07-22"
+    },
+    {
+      "stand" : 15,
+      "move" : 357,
+      "exercise" : 34,
+      "date" : "2020-07-23"
+    },
+    {
+      "stand" : 15,
+      "move" : 286,
+      "exercise" : 17,
+      "date" : "2020-07-24"
+    },
+    {
+      "stand" : 17,
+      "move" : 622,
+      "exercise" : 71,
+      "date" : "2020-07-25"
+    },
+    {
+      "stand" : 15,
+      "move" : 621,
+      "exercise" : 52,
+      "date" : "2020-07-26"
+    },
+    {
+      "stand" : 13,
+      "move" : 667,
+      "exercise" : 108,
+      "date" : "2020-07-27"
+    },
+    {
+      "stand" : 15,
+      "move" : 557,
+      "exercise" : 56,
+      "date" : "2020-07-28"
+    },
+    {
+      "stand" : 17,
+      "move" : 633,
+      "exercise" : 55,
+      "date" : "2020-07-29"
+    },
+    {
+      "stand" : 15,
+      "move" : 351,
+      "exercise" : 24,
+      "date" : "2020-07-30"
+    },
+    {
+      "stand" : 16,
+      "move" : 338,
+      "exercise" : 30,
+      "date" : "2020-07-31"
+    }
+]

@@ -14,6 +14,7 @@
 
 open Ciphers
 open Images
+open Health
 
 (*
 * On fait notre démonstration
@@ -83,11 +84,25 @@ let rec faire_les_tests tests =
         else
             failwith (nom ^ " : Echec du test");
 
+        (* On effectue le chiffrement des données de santé *)
+        let o = new healthData in
+        o#read "./files/health.json";
+        o#crypt cipher_encrypt;
+        o#write ("./files/health_" ^ nom ^ ".json");
+        print_endline (nom ^ " : Données de santé chiffrées");
+
+        (* Que l'on déchiffre pour vérifier *)
+        let o = new healthData in
+        o#read ("./files/health_" ^ nom ^ ".json");
+        o#decrypt cipher_decrypt;
+        o#write ("./files/health_" ^ nom ^ "_decrypted.json");
+        print_endline (nom ^ " : Données de santé déchiffrées");
+
         (* On test également le chiffrement d'images *)
         let o = new img in
-        o#read "./images/moi.png";
+        o#read "./files/moi.png";
         o#crypt cipher_encrypt;
-        o#write ("./images/moi_" ^ nom ^ ".png");
+        o#write ("./files/moi_" ^ nom ^ ".png");
         print_endline (nom ^ " : Image chiffrée");
         
         (* On passe aux tests suivants *)
