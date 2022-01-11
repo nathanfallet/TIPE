@@ -14,3 +14,18 @@ jobs:
         run: cd ocaml/ && sh build.sh
       - name: Run the project and tests
         run: ./ocaml/a.out
+      - uses: actions/upload-artifact@v2
+        with:
+          path: |
+            moi_ECB.png
+            moi_CBC.png
+            moi_OFB.png
+            moi_CFB.png
+            health_ECB.bin
+            health_CBC.bin
+            health_OFB.bin
+            health_CFB.bin
+            health_ECB_decrypted.json
+            health_CBC_decrypted.json
+            health_OFB_decrypted.json
+            health_CFB_decrypted.json
