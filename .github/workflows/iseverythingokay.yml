@@ -14,7 +14,8 @@ jobs:
         run: cd ocaml/ && sh build.sh
       - name: Run the project and tests
         run: ./ocaml/a.out
-      - uses: actions/upload-artifact@v2
+      - name: Upload results
+        uses: actions/upload-artifact@v2
         with:
           path: |
             moi_ECB.png
