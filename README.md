@@ -1,8 +1,8 @@
 # TIPE 2021-2022
 
-## Idées envisagées
+## Idée du TIPE
 
-Etude des algorithmes de cryptographie symétriques et asymétriques (avec objectif RSA et AES, en passant par des exemples plus simples)
+Etude de l'algorithme de cryptographie symétrique AES.
 
 ## Documents textuels rédigés lors du TIPE
 
@@ -23,7 +23,3 @@ sh build.sh
 ./a.out # Pour Linux/macOS
 ./camlprog.exe # Pour Windows
 ```
-
-## Liens utiles
-
-Tableau Trello : https://trello.com/b/lKhSvegX
